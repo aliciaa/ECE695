@@ -1,0 +1,4 @@
+# ignore all output
+output/
+target/
+metastore_db/

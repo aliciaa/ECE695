@@ -1,5 +1,7 @@
 # ignore all output
-output/
-target/
+output*/
+target/*
 metastore_db/
 **/test/
+**/*.xml
+**/**/*.xml

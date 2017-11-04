@@ -12,3 +12,14 @@ case class ServerEvent (
     normalizedMemory: Float,
     normalizedDiskSpace: Float                  
 )
+
+case class ServerUsage(
+    timeStamp: Integer,
+    machineId: Integer,
+    usedPercentOfCpus: Float,
+    usedPercentOfMemory: Float,
+    usedPercentOfDiskSpace: Float,
+    linuxCpuLoadAvergOfOneMin: Float,
+    linuxCpuLoadAvergOfFiveMin: Float,
+    linuxCpuLoadAvergOfFifteenMin: Float                  
+)

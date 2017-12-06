@@ -134,17 +134,5 @@ class Analysis(spark: SparkSession, eventRecords: Dataset[ServerEvent], usageRec
         case(machineId: Integer, records: Seq[(Integer, Float)]) => records.map( r=> (machineId, r._1, r._2))
       }
   }
-  
-  def test = {
-    val usedPercentOfCpus = usageRecords
-      .groupByKey(_.machineId)
-      .mapGroups{
-        case(machineId, records) => (machineId, records.toSeq.sortBy(_.timeStamp).map(r=>(r.timeStamp, r.usedPercentOfCpus)))
-      }
-      .flatMap{
-        case(machineId, records) => records.map(r => (machineId, r._1, r._2))
-      }
-      .groupBy("_2")
-  }
 }
 

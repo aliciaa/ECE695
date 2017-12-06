@@ -32,3 +32,4 @@ case class StatsInfo(
   min: Float,
   max: Float                  
 )
+

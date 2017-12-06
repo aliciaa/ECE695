@@ -4,11 +4,11 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 import scala.collection._
-
+import main.scala.com.ece.alianalysis.Utils
 
 class ServerJob(spark: SparkSession) {
   
-  def run(eventPath: String, usagePath: String) = {
+  def run(eventPath: String, usagePath: String, outputPath: String) = {
       //val eventPath = "/Users/Di/Documents/ECE695/trace_201708/server_event.csv";
       val eventRecords: Dataset[ServerEvent] = readEventFile(eventPath);
       
@@ -18,7 +18,7 @@ class ServerJob(spark: SparkSession) {
       
     
       val analysis = new Analysis(spark, eventRecords, usageRecords);
-      val distinctServerEventMachineIdNum = analysis.countUniqueServerEventMachineId();
+      /*val distinctServerEventMachineIdNum = analysis.countUniqueServerEventMachineId();
     
       val serverEvent = analysis.serverEventType();
       val addEvent = serverEvent.filter(e=>e._1 == "add").first()
@@ -39,25 +39,8 @@ class ServerJob(spark: SparkSession) {
       val memoryInfo = analysis.memoryInfo();
       val diskInfo = analysis.diskInfo();
 
-
-    /*val result: RDD[ServerResults] =
-      spark
-        .sparkContext
-        .parallelize[ServerResults](
-        Seq(ServerResults(
-          distinctServerEventMachineIdNum,
-          EventCount(addEvent._1, addEvent._2),
-          EventCount(softErrorEvent._1, softErrorEvent._2),
-          EventCount("ERROR", -1),
-          EventCount("ERROR", -1),
-          EventCount("ERROR", -1),
-          EventCount("ERROR", -1),
-          EventCount("ERROR", -1),
-          EventCount(cpuCap1._1.toString, cpuCap1._2),
-          EventCount(cpuCap2._1.toString, cpuCap2._2),
-          memoryInfo.toString, diskInfo.toString))
-      )*/
-      val result: RDD[ServerResults] = 
+    
+      val serverEventResult: RDD[ServerResults] = 
         spark
           .sparkContext
           .parallelize[ServerResults](
@@ -74,8 +57,18 @@ class ServerJob(spark: SparkSession) {
             EventCount(cpuCap2._1.toString, cpuCap2._2),
             memoryInfo.toString, diskInfo.toString)))
         
-      result.saveAsTextFile("./output/")
+      serverEventResult.saveAsTextFile("./output/")*/
       
+      /*val numOfMachinesAtSameTime: Dataset[(Integer, Int)] = analysis.numOfMachinesAtSameTime();
+      numOfMachinesAtSameTime.rdd.saveAsTextFile(outputPath + "/numOfMachinesAtSameTime/")  */
+    
+      /*val serverUsageDuration: Dataset[(Integer, Int)] = analysis.serverUsageDuration();
+      serverUsageDuration.rdd.saveAsTextFile(outputPath + "/serverUsageDuration/")*/
+    
+      usageRecords.write.parquet(outputPath + "/usageRecords/")
+    
+      /*val cpuUsageAlongTime: Dataset[(Integer, Integer, Float)] = analysis.cpuUsageAlongTime();
+      cpuUsageAlongTime.rdd.saveAsTextFile(outputPath + "/proj/racksystem-PG0/groups/jind/cpuUsageAlongTime/")*/
   }
 
   def readEventFile(path: String): Dataset[ServerEvent] = {
@@ -108,19 +101,20 @@ class ServerJob(spark: SparkSession) {
         .csv(path)
     
     import spark.implicits._
+    val utils = new Utils(spark)
     
     records.map{
       r=>{
-        //println(r.getString(0))
-        ServerUsage(r.getString(0).toInt,
-          r.getString(1).toInt,
-          r.getString(2).toFloat,
-          r.getString(3).toFloat,
-          r.getString(4).toFloat,
-          r.getString(5).toInt,
-          r.getString(6).toFloat,
-          r.getString(6).toFloat)
+        ServerUsage(utils.toInt(r.getString(0)),
+          utils.toInt(r.getString(1)),
+          utils.toFloat(r.getString(2)),
+          utils.toFloat(r.getString(3)),
+          utils.toFloat(r.getString(4)),
+          utils.toFloat(r.getString(5)),
+          utils.toFloat(r.getString(6)),
+          utils.toFloat(r.getString(7)))
       }
+      
     }
   }
 }
@@ -129,9 +123,10 @@ object ServerJob {
   def main(args: Array[String]) {
     val serverEventPath = args(0)
     val serverUsagePath = args(1)
+    val outputPath = args(2)
 
     val spark: SparkSession = SparkSession.builder().appName("ServerEvent").getOrCreate()
     val job = new ServerJob(spark)
-    val results = job.run(serverEventPath, serverUsagePath)
+    val results = job.run(serverEventPath, serverUsagePath, outputPath)
   }
 }

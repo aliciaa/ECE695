@@ -1,12 +1,13 @@
 package main.scala.com.ece.alianalysis
 
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, KeyValueGroupedDataset, SparkSession}
 
 
 /**
   * Created by Di on 11/2/17.
   */
 class Analysis(spark: SparkSession, eventRecords: Dataset[ServerEvent], usageRecords: Dataset[ServerUsage]) {
+  //This part is about event records
   def countUniqueServerEventMachineId(): Long = {
     import spark.implicits._
 
@@ -82,6 +83,8 @@ class Analysis(spark: SparkSession, eventRecords: Dataset[ServerEvent], usageRec
     StatsInfo("disk Info", count, mean, stddev, min, max)
   }
   
+  
+  //this part is about usage records
   def countUniqueServerUsageMachineId(): Long = {
     import spark.implicits._
 
@@ -91,5 +94,57 @@ class Analysis(spark: SparkSession, eventRecords: Dataset[ServerEvent], usageRec
       .count()
   }
   
+  //return value is time, # of active machines
+  def numOfMachinesAtSameTime(): Dataset[(Integer, Int)] = {
+    import spark.implicits._
+    
+    usageRecords
+      .groupByKey(_.timeStamp)
+      .mapGroups{
+        case (time, records) => (time, records.map(r=>r.machineId).toSeq.distinct.length) 
+    }
+  }
+  
+  //return value is machineID, jobDuration
+  def serverUsageDuration(): Dataset[(Integer, Int)] = {
+    import spark.implicits._
+    
+    usageRecords
+      .groupByKey(_.machineId)
+      .mapGroups{
+        case(machineId, records) => (machineId, records.toSeq.sortBy(_.timeStamp).map(r=>r.timeStamp))
+      }
+      .map{
+        case(machineId: Integer, jobDurations: Seq[Integer]) => (machineId, jobDurations.last-jobDurations.head)
+      }
+    
+    
+  }
+  
+  //return value is machineID, timeStamp, usedPercentOfCpus
+  def cpuUsageAlongTime(): Dataset[(Integer, Integer, Float)] ={
+    import spark.implicits._
+    
+    usageRecords
+      .groupByKey(_.machineId)
+      .mapGroups{
+        case(machineId, records) => (machineId, records.toSeq.sortBy(_.timeStamp).map(r=>(r.timeStamp, r.usedPercentOfCpus)))
+      }
+      .flatMap{
+        case(machineId: Integer, records: Seq[(Integer, Float)]) => records.map( r=> (machineId, r._1, r._2))
+      }
+  }
+  
+  def test = {
+    val usedPercentOfCpus = usageRecords
+      .groupByKey(_.machineId)
+      .mapGroups{
+        case(machineId, records) => (machineId, records.toSeq.sortBy(_.timeStamp).map(r=>(r.timeStamp, r.usedPercentOfCpus)))
+      }
+      .flatMap{
+        case(machineId, records) => records.map(r => (machineId, r._1, r._2))
+      }
+      .groupBy("_2")
+  }
 }
 

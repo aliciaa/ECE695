@@ -1,7 +1,6 @@
-# ignore all output
+target/**
 output*/
-target/*
-metastore_db/
-**/test/
+metastore_db/**
+/**/test/
 **/*.xml
 **/**/*.xml

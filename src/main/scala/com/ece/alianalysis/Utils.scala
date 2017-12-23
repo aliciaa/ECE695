@@ -27,4 +27,14 @@ class Utils(spark: SparkSession) extends java.io.Serializable {
         case e: Exception => -1.0f
       }
     }
+  
+    def toLong(input: String): Long = {
+        import spark.implicits._
+        try{
+          input.toLong
+        } catch {
+          case e: Exception => -1L
+        }
+      
+    }
 }

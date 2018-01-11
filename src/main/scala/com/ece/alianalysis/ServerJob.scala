@@ -18,7 +18,7 @@ class ServerJob(spark: SparkSession) {
       
     
       val analysis = new Analysis(spark, eventRecords, usageRecords);
-      /*val distinctServerEventMachineIdNum = analysis.countUniqueServerEventMachineId();
+      val distinctServerEventMachineIdNum = analysis.countUniqueServerEventMachineId();
     
       val serverEvent = analysis.serverEventType();
       val addEvent = serverEvent.filter(e=>e._1 == "add").first()
@@ -57,18 +57,18 @@ class ServerJob(spark: SparkSession) {
             EventCount(cpuCap2._1.toString, cpuCap2._2),
             memoryInfo.toString, diskInfo.toString)))
         
-      serverEventResult.saveAsTextFile("./output/")*/
+      serverEventResult.saveAsTextFile("./output/")
       
-      /*val numOfMachinesAtSameTime: Dataset[(Integer, Int)] = analysis.numOfMachinesAtSameTime();
-      numOfMachinesAtSameTime.rdd.saveAsTextFile(outputPath + "/numOfMachinesAtSameTime/")  */
+      val numOfMachinesAtSameTime: Dataset[(Integer, Int)] = analysis.numOfMachinesAtSameTime();
+      numOfMachinesAtSameTime.rdd.saveAsTextFile(outputPath + "/numOfMachinesAtSameTime/")  
     
-      /*val serverUsageDuration: Dataset[(Integer, Int)] = analysis.serverUsageDuration();
-      serverUsageDuration.rdd.saveAsTextFile(outputPath + "/serverUsageDuration/")*/
+      val serverUsageDuration: Dataset[(Integer, Int)] = analysis.serverUsageDuration();
+      serverUsageDuration.rdd.saveAsTextFile(outputPath + "/serverUsageDuration/")
     
       usageRecords.write.parquet(outputPath + "/usageRecords/")
     
-      /*val cpuUsageAlongTime: Dataset[(Integer, Integer, Float)] = analysis.cpuUsageAlongTime();
-      cpuUsageAlongTime.rdd.saveAsTextFile(outputPath + "/proj/racksystem-PG0/groups/jind/cpuUsageAlongTime/")*/
+      val cpuUsageAlongTime: Dataset[(Integer, Integer, Float)] = analysis.cpuUsageAlongTime();
+      cpuUsageAlongTime.rdd.saveAsTextFile(outputPath + "/proj/racksystem-PG0/groups/jind/cpuUsageAlongTime/")
   }
 
   def readEventFile(path: String): Dataset[ServerEvent] = {
